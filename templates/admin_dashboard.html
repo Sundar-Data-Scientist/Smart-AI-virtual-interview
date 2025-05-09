@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h2 {
+      color: #263238;
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      animation: fadeIn 0.8s ease-in;
+    }
+    .form-label {
+      color: #455a64;
+      font-weight: 500;
+    }
+    .form-control, .form-select {
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .btn-filter {
+      background: #0288d1;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .btn-filter:hover {
+      background: #0277bd;
+      transform: translateY(-2px);
+    }
+    .btn-action {
+      padding: 10px 20px;
+      border-radius: 10px;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .btn-action:hover {
+      transform: translateY(-2px);
+    }
+    .table {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      vertical-align: middle;
+    }
+    .visual-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      cursor: pointer;
+      background: #0288d1;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .visual-icon:hover {
+      background: #0277bd;
+      transform: scale(1.1);
+    }
+    .visual-icon img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .bulk-action-btn {
+      margin-right: 10px;
+      margin-bottom: 10px;
+      padding: 10px 15px;
+      font-size: 0.9rem;
+    }
+    .btn-download-reject {
+      background: #dc3545;
+      border: none;
+    }
+    .btn-download-reject:hover {
+      background: #c82333;
+    }
+    .btn-send-selected {
+      background: #17a2b8;
+      border: none;
+    }
+    .btn-send-selected:hover {
+      background: #138496;
+    }
+    .btn-send-reject {
+      background: #6c757d;
+      border: none;
+    }
+    .btn-send-reject:hover {
+      background: #5a6268;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Interview Results Dashboard</h2>
+    <div class="card">
+      <div class="card-body">
+        <form method="get" action="/admin/dashboard">
+          <div class="row g-3">
+            <!-- Interview Level Filter -->
+            <div class="col-md-2">
+              <label for="level" class="form-label">Interview Level</label>
+              <select class="form-select" id="level" name="level">
+                <option value="">-- Select Level --</option>
+                <option value="1" {% if level == '1' %}selected{% endif %}>Level 1 (Aptitude)</option>
+                <option value="2" {% if level == '2' %}selected{% endif %}>Level 2 (Interview)</option>
+                <option value="3" {% if level == '3' %}selected{% endif %}>Level 3 (HR Interview)</option>
+              </select>
+            </div>
+            <!-- From Date Filter -->
+            <div class="col-md-2">
+              <label for="from_date" class="form-label">From Date</label>
+              <input type="date" class="form-control" id="from_date" name="from_date" value="{{ from_date }}" placeholder="Optional">
+            </div>
+            <!-- To Date Filter -->
+            <div class="col-md-2">
+              <label for="to_date" class="form-label">To Date</label>
+              <input type="date" class="form-control" id="to_date" name="to_date" value="{{ to_date }}" placeholder="Optional">
+            </div>
+            <!-- Min Score Filter -->
+            <div class="col-md-2">
+              <label for="min_mark" class="form-label">Min Score</label>
+              <input type="number" class="form-control" id="min_mark" name="min_mark" step="0.01" min="0" value="{{ min_mark }}" placeholder="Optional">
+            </div>
+            <!-- Max Score Filter -->
+            <div class="col-md-2">
+              <label for="max_mark" class="form-label">Max Score</label>
+              <input type="number" class="form-control" id="max_mark" name="max_mark" step="0.01" min="0" value="{{ max_mark }}" placeholder="Optional">
+            </div>
+            <!-- Top N Filter -->
+            <div class="col-md-2">
+              <label for="top_number" class="form-label">Top N</label>
+              <input type="number" class="form-control" id="top_number" name="top_number" min="1" value="{{ top_number }}" placeholder="Optional">
+            </div>
+            <!-- Job Role Filter (only for Level 2) -->
+            {% if job_roles|length > 0 %}
+            <div class="col-md-2">
+              <label for="job_role" class="form-label">Job Role</label>
+              <select class="form-select" id="job_role" name="job_role">
+                <option value="">-- Select Job Role --</option>
+                {% for role in job_roles %}
+                <option value="{{ role }}" {% if job_role == role %}selected{% endif %}>{{ role }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-filter w-100">Apply Filters</button>
+            </div>
+          </div>
+        </form>
+        {% if results %}
+        <table class="table table-striped mt-4">
+          <thead class="table-dark">
+            <tr>
+              <th>Select</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Date</th>
+              <th>Score</th>
+              {% if level == '2' %}<th>Job Role</th>{% endif %}
+              <th>Responses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for result in results %}
+            <tr>
+              <td><input type="checkbox" name="selected_emails" value="{{ result['candidate email'] }}"></td>
+              <td>{{ result['candidate name'] }}</td>
+              <td>{{ result['candidate email'] }}</td>
+              <td>{{ result['interview date'] }}</td>
+              <td>{{ result['total score'] }}</td>
+              {% if level == '2' %}<td>{{ result['job role'] }}</td>{% endif %}
+              <td>
+                {% if level == '1' %}
+                  No responses available
+                {% else %}
+                  <a href="/admin/view_responses?email={{ result['candidate email'] }}&level={{ level }}" class="btn btn-info btn-sm">View</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="bulk-actions mt-4 text-center">
+          <button class="btn btn-success btn-action bulk-action-btn" onclick="bulkAction('download_selected')">Download Selected</button>
+          <button class="btn btn-danger btn-action bulk-action-btn btn-download-reject" onclick="bulkAction('download_reject')">Download Reject</button>
+          <button class="btn btn-success btn-action bulk-action-btn btn-send-selected" onclick="bulkAction('send_selected_mail')">Send Selected Mail</button>
+          <button class="btn btn-warning btn-action bulk-action-btn btn-send-reject" onclick="bulkAction('send_reject_mail')">Send Reject Mail</button>
+        </div>
+        {% else %}
+        <p class="text-center mt-4">No results available.</p>
+        {% endif %}
+      </div>
+    </div>
+    <a href="/admin/visual_dashboard" class="visual-icon">
+      <img src="/static/images/icons8-bar-chart.gif" alt="Visual Dashboard">
+    </a>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function bulkAction(action) {
+      const selectedEmails = Array.from(document.querySelectorAll('input[name="selected_emails"]:checked')).map(cb => cb.value).join(',');
+      if (!selectedEmails) {
+        alert('Please select at least one candidate.');
+        return;
+      }
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/admin/bulk_action';
+      const actionInput = document.createElement('input');
+      actionInput.type = 'hidden';
+      actionInput.name = 'action';
+      actionInput.value = action;
+      form.appendChild(actionInput);
+      const emailsInput = document.createElement('input');
+      emailsInput.type = 'hidden';
+      emailsInput.name = 'selected_emails';
+      emailsInput.value = selectedEmails;
+      form.appendChild(emailsInput);
+      const level = document.getElementById('level').value;
+      if (level) {
+        const levelInput = document.createElement('input');
+        levelInput.type = 'hidden';
+        levelInput.name = 'level';
+        levelInput.value = level;
+        form.appendChild(levelInput);
+      }
+      const from_date = document.getElementById('from_date').value;
+      if (from_date) {
+        const fromDateInput = document.createElement('input');
+        fromDateInput.type = 'hidden';
+        fromDateInput.name = 'from_date';
+        fromDateInput.value = from_date;
+        form.appendChild(fromDateInput);
+      }
+      const to_date = document.getElementById('to_date').value;
+      if (to_date) {
+        const toDateInput = document.createElement('input');
+        toDateInput.type = 'hidden';
+        toDateInput.name = 'to_date';
+        toDateInput.value = to_date;
+        form.appendChild(toDateInput);
+      }
+      const min_mark = document.getElementById('min_mark').value;
+      if (min_mark) {
+        const minMarkInput = document.createElement('input');
+        minMarkInput.type = 'hidden';
+        minMarkInput.name = 'min_mark';
+        minMarkInput.value = min_mark;
+        form.appendChild(minMarkInput);
+      }
+      const max_mark = document.getElementById('max_mark').value;
+      if (max_mark) {
+        const maxMarkInput = document.createElement('input');
+        maxMarkInput.type = 'hidden';
+        maxMarkInput.name = 'max_mark';
+        maxMarkInput.value = max_mark;
+        form.appendChild(maxMarkInput);
+      }
+      const top_number = document.getElementById('top_number').value;
+      if (top_number) {
+        const topNumberInput = document.createElement('input');
+        topNumberInput.type = 'hidden';
+        topNumberInput.name = 'top_number';
+        topNumberInput.value = top_number;
+        form.appendChild(topNumberInput);
+      }
+      document.body.appendChild(form);
+      form.submit();
+    }
+  </script>
+</body>
+</html>
